@@ -9,9 +9,23 @@ categories_bp = Blueprint('categories', __name__)
 def get_categories():
     """获取分类列表"""
     try:
-        categories = Category.query.all()
+        # 获取分页参数
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        
+        # 分页查询
+        categories = Category.query.paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
+        
         return jsonify({
-            'categories': [category.to_dict() for category in categories]
+            'categories': [category.to_dict() for category in categories.items],
+            'total': categories.total,
+            'page': categories.page,
+            'per_page': categories.per_page,
+            'pages': categories.pages
         }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500

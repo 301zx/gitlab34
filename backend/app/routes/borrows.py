@@ -119,12 +119,15 @@ def get_my_borrows():
         current_user_id = get_jwt_identity()
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
-        status = request.args.getlist('status')
+        
+        # 处理 status 参数，支持单值和数组值
+        # 使用 getlist 获取所有 status 参数，包括数组形式的 status[]
+        status_values = request.args.getlist('status')
 
         query = BorrowRecord.query.filter_by(user_id=current_user_id)
 
-        if status:
-            query = query.filter(BorrowRecord.status.in_(status))
+        if status_values:
+            query = query.filter(BorrowRecord.status.in_(status_values))
 
         # 按借阅时间倒序排列
         borrows = query.order_by(BorrowRecord.borrow_date.desc()).paginate(
@@ -144,7 +147,8 @@ def get_my_borrows():
             'borrows': borrows_data,
             'total': borrows.total,
             'page': borrows.page,
-            'per_page': borrows.per_page
+            'per_page': borrows.per_page,
+            'pages': borrows.pages
         }), 200
 
     except Exception as e:

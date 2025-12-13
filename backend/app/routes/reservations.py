@@ -95,11 +95,23 @@ def get_my_reservations():
         # 获取当前用户ID
         user_id = get_jwt_identity()
         
-        # 查找当前用户的预约记录
-        reservations = Reservation.query.filter_by(user_id=user_id).all()
+        # 获取分页参数
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        
+        # 查找当前用户的预约记录，分页查询
+        reservations = Reservation.query.filter_by(user_id=user_id).paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
         
         return jsonify({
-            'reservations': [reservation.to_dict() for reservation in reservations]
+            'reservations': [reservation.to_dict() for reservation in reservations.items],
+            'total': reservations.total,
+            'page': reservations.page,
+            'per_page': reservations.per_page,
+            'pages': reservations.pages
         }), 200
         
     except Exception as e:
@@ -111,11 +123,23 @@ def get_my_reservations():
 def get_all_reservations():
     """获取所有预约列表（管理员）"""
     try:
-        # 查找所有预约记录
-        reservations = Reservation.query.all()
+        # 获取分页参数
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        
+        # 查找所有预约记录，分页查询
+        reservations = Reservation.query.paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
         
         return jsonify({
-            'reservations': [reservation.to_dict() for reservation in reservations]
+            'reservations': [reservation.to_dict() for reservation in reservations.items],
+            'total': reservations.total,
+            'page': reservations.page,
+            'per_page': reservations.per_page,
+            'pages': reservations.pages
         }), 200
         
     except Exception as e:
