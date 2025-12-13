@@ -1,0 +1,147 @@
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from ..models import db, Book, Category, User
+from ..middleware.auth import admin_required
+
+books_bp = Blueprint('books', __name__)
+
+@books_bp.route('/books', methods=['GET'])
+def get_books():
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        search = request.args.get('search', '')
+        category_id = request.args.get('category_id', type=int)
+        
+        # 构建查询
+        query = Book.query
+        
+        if search:
+            query = query.filter(
+                (Book.title.contains(search)) | 
+                (Book.author.contains(search)) |
+                (Book.isbn.contains(search))
+            )
+        
+        if category_id:
+            query = query.filter_by(category_id=category_id)
+        
+        # 分页
+        books = query.paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
+        
+        return jsonify({
+            'books': [book.to_dict() for book in books.items],
+            'total': books.total,
+            'page': books.page,
+            'per_page': books.per_page,
+            'pages': books.pages
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@books_bp.route('/books', methods=['POST'])
+@jwt_required()
+@admin_required
+def create_book():
+    try:
+        data = request.get_json()
+        
+        # 验证输入
+        required_fields = ['isbn', 'title', 'author', 'category_id', 'total_copies']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({'error': f'{field}是必填项'}), 400
+        
+        # 检查ISBN是否已存在
+        if Book.query.filter_by(isbn=data['isbn']).first():
+            return jsonify({'error': 'ISBN已存在'}), 400
+        
+        # 创建新图书
+        book = Book(
+            isbn=data['isbn'],
+            title=data['title'],
+            author=data['author'],
+            publisher=data.get('publisher'),
+            publish_date=data.get('publish_date'),
+            category_id=data['category_id'],
+            total_copies=data['total_copies'],
+            available_copies=data['total_copies']
+        )
+        
+        db.session.add(book)
+        db.session.commit()
+        
+        return jsonify({
+            'message': '图书添加成功',
+            'book': book.to_dict()
+        }), 201
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@books_bp.route('/books/<int:book_id>', methods=['GET'])
+def get_book(book_id):
+    try:
+        book = Book.query.get_or_404(book_id)
+        return jsonify({'book': book.to_dict()}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@books_bp.route('/books/<int:book_id>', methods=['PUT'])
+@jwt_required()
+@admin_required
+def update_book(book_id):
+    try:
+        book = Book.query.get_or_404(book_id)
+        data = request.get_json()
+        
+        # 更新字段
+        if 'title' in data:
+            book.title = data['title']
+        if 'author' in data:
+            book.author = data['author']
+        if 'publisher' in data:
+            book.publisher = data['publisher']
+        if 'publish_date' in data:
+            book.publish_date = data['publish_date']
+        if 'category_id' in data:
+            book.category_id = data['category_id']
+        if 'total_copies' in data:
+            # 更新可用副本数
+            diff = data['total_copies'] - book.total_copies
+            book.total_copies = data['total_copies']
+            book.available_copies += diff
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': '图书更新成功',
+            'book': book.to_dict()
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@books_bp.route('/books/<int:book_id>', methods=['DELETE'])
+@jwt_required()
+@admin_required
+def delete_book(book_id):
+    try:
+        book = Book.query.get_or_404(book_id)
+        
+        # 检查图书是否被借阅
+        if book.available_copies != book.total_copies:
+            return jsonify({'error': '图书已被借阅，无法删除'}), 400
+        
+        db.session.delete(book)
+        db.session.commit()
+        
+        return jsonify({'message': '图书删除成功'}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
