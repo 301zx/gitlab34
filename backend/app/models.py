@@ -134,3 +134,52 @@ class Review(db.Model):
             'comment': self.comment,
             'created_at': self.created_at.isoformat()
         }
+
+class Reservation(db.Model):
+    __tablename__ = 'reservations'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    book_id = db.Column(db.Integer, db.ForeignKey('books.id'), nullable=False)
+    reservation_date = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(20), default='pending')  # pending, active, canceled, fulfilled
+    expires_at = db.Column(db.DateTime, nullable=False)
+    
+    # Relationships
+    user = db.relationship('User', backref='reservations')
+    book = db.relationship('Book', backref='reservations')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'book_id': self.book_id,
+            'reservation_date': self.reservation_date.isoformat(),
+            'status': self.status,
+            'expires_at': self.expires_at.isoformat()
+        }
+
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    notification_type = db.Column(db.String(50), nullable=False)  # borrow_reminder, return_reminder, reservation_available, etc.
+    
+    # Relationships
+    user = db.relationship('User', backref='notifications')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'title': self.title,
+            'content': self.content,
+            'is_read': self.is_read,
+            'created_at': self.created_at.isoformat(),
+            'notification_type': self.notification_type
+        }

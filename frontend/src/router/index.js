@@ -15,15 +15,16 @@ const routes = [
         component: () => import('@/views/Books.vue')
       },
       {
+        path: 'books/:id',
+        name: 'BookDetail',
+        component: () => import('@/views/BookDetail.vue')
+      },
+      {
         path: 'my-books',
         name: 'MyBooks',
         component: () => import('@/views/MyBooks.vue')
       },
-      {
-        path: 'profile',
-        name: 'Profile',
-        component: () => import('@/views/pofile.vue')
-      }
+      {        path: 'profile',        name: 'Profile',        component: () => import('@/views/profile.vue')      }
     ]
   },
   {
@@ -74,6 +75,11 @@ const routes = [
         path: 'statistics',
         name: 'Statistics',
         component: () => import('@/views/admin/Statistics.vue')
+      },
+      {
+        path: 'logs',
+        name: 'LogManagement',
+        component: () => import('@/views/admin/LogManagement.vue')
       }
     ]
   },

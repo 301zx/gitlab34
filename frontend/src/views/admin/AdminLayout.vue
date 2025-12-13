@@ -5,11 +5,11 @@
         <div class="header-content">
           <h2>管理员控制台</h2>
           <div class="header-actions">
-            <el-button @click="$router.push('/')">
-              <el-icon><Home /></el-icon>
-              返回首页
-            </el-button>
-          </div>
+          <el-button @click="$router.push('/')">
+            <el-icon><House /></el-icon>
+            返回首页
+          </el-button>
+        </div>
         </div>
       </el-header>
 
@@ -49,6 +49,11 @@
               <el-icon><DataAnalysis /></el-icon>
               <span>数据统计</span>
             </el-menu-item>
+            
+            <el-menu-item index="/admin/logs">
+              <el-icon><Document /></el-icon>
+              <span>系统日志</span>
+            </el-menu-item>
           </el-menu>
         </el-aside>
 
@@ -64,13 +69,14 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import {
-  Home,
+  House,
   DataBoard,
   User,
   Reading,
   CollectionTag,
   DocumentCopy,
-  DataAnalysis
+  DataAnalysis,
+  Document
 } from '@element-plus/icons-vue'
 
 const route = useRoute()

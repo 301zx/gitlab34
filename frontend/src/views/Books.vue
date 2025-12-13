@@ -44,6 +44,48 @@
       <el-button @click="resetFilters">重置筛选</el-button>
     </div>
 
+    <!-- 高级搜索 -->
+    <div class="advanced-search">
+      <el-collapse v-model="activeAdvancedSearch">
+        <el-collapse-item title="高级搜索" name="advanced">
+          <div class="advanced-search-form">
+            <el-input
+              v-model="filters.publisher"
+              placeholder="按出版社搜索"
+              class="advanced-filter-input"
+              @input="handleSearch"
+            />
+
+            <div class="year-range">
+              <span class="year-label">出版年份：</span>
+              <el-input-number
+                v-model="filters.minPublishYear"
+                :min="1900"
+                :max="new Date().getFullYear()"
+                placeholder="起始年份"
+                @change="handleSearch"
+              />
+              <span class="year-separator">至</span>
+              <el-input-number
+                v-model="filters.maxPublishYear"
+                :min="1900"
+                :max="new Date().getFullYear()"
+                placeholder="结束年份"
+                @change="handleSearch"
+              />
+            </div>
+
+            <el-checkbox
+              v-model="filters.availableOnly"
+              @change="handleSearch"
+            >
+              仅显示可借阅图书
+            </el-checkbox>
+          </div>
+        </el-collapse-item>
+      </el-collapse>
+    </div>
+
     <!-- 图书列表 -->
     <div class="books-list">
       <el-row :gutter="20">
@@ -79,8 +121,17 @@
                   size="small"
                   :disabled="book.available_copies === 0"
                   @click="handleBorrow(book)"
+                  v-if="book.available_copies > 0"
                 >
                   借阅
+                </el-button>
+                <el-button 
+                  type="info" 
+                  size="small"
+                  @click="handleReservation(book)"
+                  v-else
+                >
+                  预约
                 </el-button>
                 <el-button 
                   size="small"
@@ -133,22 +184,32 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { bookService } from '@/services/bookService'
+import { categoriesService } from '@/services/categoriesService'
+import { borrowService } from '@/services/borrowService'
+import { reservationService } from '@/services/reservationService'
 import BookForm from '@/components/BookForm.vue'
 
 const authStore = useAuthStore()
+const router = useRouter()
 
 const books = ref([])
 const categories = ref([])
 const showAddBookDialog = ref(false)
 const editingBook = ref(null)
+const activeAdvancedSearch = ref([])
 
 const filters = reactive({
   search: '',
-  category: null
+  category: null,
+  publisher: '',
+  minPublishYear: null,
+  maxPublishYear: null,
+  availableOnly: false
 })
 
 const pagination = reactive({
@@ -164,7 +225,11 @@ const loadBooks = async () => {
       page: pagination.current,
       per_page: pagination.size,
       search: filters.search || undefined,
-      category_id: filters.category || undefined
+      category_id: filters.category || undefined,
+      publisher: filters.publisher || undefined,
+      min_publish_year: filters.minPublishYear || undefined,
+      max_publish_year: filters.maxPublishYear || undefined,
+      available_only: filters.availableOnly || undefined
     }
 
     const response = await bookService.getBooks(params)
@@ -181,6 +246,9 @@ const loadCategories = async () => {
   try {
     // 这里需要实现分类服务
     // categories.value = await categoryService.getCategories()
+    // 注意：categoriesService已经实现，直接调用即可
+    const response = await categoriesService.getCategories()
+    categories.value = response
   } catch (error) {
     console.error('加载分类失败:', error)
   }
@@ -199,6 +267,10 @@ const handleFilterChange = () => {
 const resetFilters = () => {
   filters.search = ''
   filters.category = null
+  filters.publisher = ''
+  filters.minPublishYear = null
+  filters.maxPublishYear = null
+  filters.availableOnly = false
   pagination.current = 1
   loadBooks()
 }
@@ -232,18 +304,49 @@ const handleBorrow = async (book) => {
     )
 
     // 调用借阅服务
-    // await borrowService.borrowBook(book.id)
+    await borrowService.borrowBook(book.id)
     ElMessage.success('借阅成功！')
     loadBooks() // 刷新列表
   } catch (error) {
-    // 用户取消
+    // 如果是用户取消，不显示错误信息
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '借阅失败，请稍后重试')
+    }
+  }
+}
+
+const handleReservation = async (book) => {
+  if (!authStore.isAuthenticated) {
+    ElMessage.warning('请先登录')
+    return
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      `确定要预约《${book.title}》吗？预约有效期为7天。`,
+      '确认预约',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'info'
+      }
+    )
+
+    // 调用预约服务
+    await reservationService.createReservation(book.id)
+    ElMessage.success('预约成功！')
+    loadBooks() // 刷新列表
+  } catch (error) {
+    // 如果是用户取消，不显示错误信息
+    if (error !== 'cancel') {
+      ElMessage.error(error.message || '预约失败，请稍后重试')
+    }
   }
 }
 
 const viewBookDetail = (book) => {
   // 跳转到图书详情页
-  // router.push(`/books/${book.id}`)
-  ElMessage.info(`查看图书详情: ${book.title}`)
+  router.push(`/books/${book.id}`)
 }
 
 const handleEdit = (book) => {
@@ -370,12 +473,49 @@ onMounted(() => {
   height: 300px;
 }
 
+/* 高级搜索样式 */
+.advanced-search {
+  margin: 15px 0 20px;
+  background-color: #f9f9f9;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.advanced-search-form {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 15px 0;
+}
+
+.advanced-filter-input {
+  width: 200px;
+}
+
+.year-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.year-label {
+  font-weight: 500;
+  color: #606266;
+}
+
+.year-separator {
+  color: #909399;
+}
+
+/* 响应式设计 */
 @media (max-width: 768px) {
   .books-filter {
     flex-direction: column;
   }
   
-  .filter-input {
+  .filter-input,
+  .advanced-filter-input {
     width: 100%;
   }
   
@@ -387,6 +527,16 @@ onMounted(() => {
   
   .book-actions {
     flex-direction: column;
+  }
+  
+  .advanced-search-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .year-range {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 </style>

@@ -232,6 +232,65 @@ def renew_book(record_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@borrows_bp.route('/borrows/batch/return', methods=['POST'])
+@jwt_required()
+@admin_required
+def batch_return_books():
+    """批量归还图书（管理员权限）"""
+    try:
+        data = request.get_json()
+        record_ids = data.get('record_ids', [])
+
+        if not record_ids or not isinstance(record_ids, list):
+            return jsonify({'error': '请选择要归还的借阅记录'}), 400
+
+        # 开始事务
+        returned_count = 0
+        errors = []
+
+        for record_id in record_ids:
+            try:
+                borrow_record = BorrowRecord.query.get(record_id)
+                if not borrow_record:
+                    errors.append(f'借阅记录 {record_id} 不存在')
+                    continue
+
+                if borrow_record.status == 'returned':
+                    errors.append(f'借阅记录 {record_id} 已归还')
+                    continue
+
+                # 更新借阅记录
+                borrow_record.return_date = datetime.utcnow()
+                borrow_record.status = 'returned'
+
+                # 计算罚金（如果有逾期）
+                if borrow_record.due_date < datetime.utcnow():
+                    days_overdue = (datetime.utcnow() - borrow_record.due_date).days
+                    fine_rate = 0.5  # 每天0.5元
+                    borrow_record.fine_amount = days_overdue * fine_rate
+
+                # 更新图书库存
+                book = Book.query.get(borrow_record.book_id)
+                book.available_copies += 1
+
+                returned_count += 1
+            except Exception as e:
+                errors.append(f'处理借阅记录 {record_id} 时出错: {str(e)}')
+                continue
+
+        # 提交事务
+        db.session.commit()
+
+        return jsonify({
+            'message': f'批量归还完成，成功归还 {returned_count} 本图书',
+            'returned_count': returned_count,
+            'errors': errors
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 @borrows_bp.route('/borrows/stats', methods=['GET'])
 @jwt_required()
 @admin_required

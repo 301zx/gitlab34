@@ -1,7 +1,15 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..models import db, Book, Category, User
 from ..middleware.auth import admin_required
+import os
+import uuid
+from datetime import datetime
+from werkzeug.utils import secure_filename
+from pathlib import Path
+
+# 临时注释掉pandas，等安装完成后再取消注释
+# import pandas as pd
 
 books_bp = Blueprint('books', __name__)
 
@@ -12,6 +20,10 @@ def get_books():
         per_page = request.args.get('per_page', 20, type=int)
         search = request.args.get('search', '')
         category_id = request.args.get('category_id', type=int)
+        publisher = request.args.get('publisher', '')
+        min_publish_year = request.args.get('min_publish_year', type=int)
+        max_publish_year = request.args.get('max_publish_year', type=int)
+        available_only = request.args.get('available_only', type=bool, default=False)
         
         # 构建查询
         query = Book.query
@@ -25,6 +37,22 @@ def get_books():
         
         if category_id:
             query = query.filter_by(category_id=category_id)
+        
+        if publisher:
+            query = query.filter(Book.publisher.contains(publisher))
+        
+        if min_publish_year:
+            query = query.filter(
+                db.extract('year', Book.publish_date) >= min_publish_year
+            )
+        
+        if max_publish_year:
+            query = query.filter(
+                db.extract('year', Book.publish_date) <= max_publish_year
+            )
+        
+        if available_only:
+            query = query.filter(Book.available_copies > 0)
         
         # 分页
         books = query.paginate(
@@ -143,5 +171,19 @@ def delete_book(book_id):
         
         return jsonify({'message': '图书删除成功'}), 200
         
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@books_bp.route('/books/batch/import', methods=['POST'])
+@jwt_required()
+@admin_required
+def batch_import_books():
+    """批量导入图书（管理员权限）"""
+    try:
+        # 暂时禁用批量导入功能，因为pandas库尚未安装
+        return jsonify({
+            'error': '批量导入功能暂时不可用，请稍后重试'
+        }), 503
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500

@@ -10,7 +10,7 @@
           返回上一页
         </el-button>
         <el-button @click="$router.push('/')">
-          <el-icon><Home /></el-icon>
+          <el-icon><House /></el-icon>
           返回首页
         </el-button>
       </div>
@@ -19,7 +19,7 @@
 </template>
 
 <script setup>
-import { ArrowLeft, Home } from '@element-plus/icons-vue'
+import { ArrowLeft, House } from '@element-plus/icons-vue'
 </script>
 
 <style scoped>

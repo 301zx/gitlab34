@@ -41,7 +41,7 @@
         <el-table-column prop="category_id" label="分类ID" width="100" />
         <el-table-column prop="total_copies" label="总册数" width="100" />
         <el-table-column prop="available_copies" label="可借册数" width="100" />
-        <el-table-column prop="created_at" label="添加时间" width="180" formatter="dateFormatter" />
+        <el-table-column prop="created_at" label="添加时间" width="180" :formatter="dateFormatter" />
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="scope">
             <el-button
@@ -362,6 +362,20 @@ const handleDelete = async (bookId) => {
       ElMessage.error('删除失败: ' + error.message)
     }
   }
+}
+
+// 日期格式化函数
+const dateFormatter = (row, column, cellValue) => {
+  if (!cellValue) return ''
+  const date = new Date(cellValue)
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  })
 }
 
 // 选择变化
