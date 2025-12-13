@@ -70,7 +70,9 @@
               </template>
               <el-menu-item index="/admin/users">用户管理</el-menu-item>
               <el-menu-item index="/admin/books">图书管理</el-menu-item>
+              <el-menu-item index="/admin/categories">分类管理</el-menu-item>
               <el-menu-item index="/admin/borrows">借阅管理</el-menu-item>
+              <el-menu-item index="/admin/statistics">数据统计</el-menu-item>
             </el-sub-menu>
           </el-menu>
         </el-aside>

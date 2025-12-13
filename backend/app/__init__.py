@@ -87,11 +87,13 @@ def create_app(config_class=None):
     from app.routes.users import users_bp
     from app.routes.borrows import borrows_bp
     from app.routes.categories import categories_bp
+    from app.routes.reviews import reviews_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(books_bp, url_prefix='/api')
     app.register_blueprint(users_bp, url_prefix='/api')
     app.register_blueprint(borrows_bp, url_prefix='/api')
     app.register_blueprint(categories_bp, url_prefix='/api')
+    app.register_blueprint(reviews_bp, url_prefix='/api')
     
     return app

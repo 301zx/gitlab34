@@ -238,27 +238,136 @@ def renew_book(record_id):
 def get_borrow_stats():
     """获取借阅统计（管理员权限）"""
     try:
-        # 当前借阅数量
+        # 获取查询参数
+        date_range = request.args.get('range', '7d')  # 7d, 30d, 90d
+        
+        # 计算日期范围
+        now = datetime.utcnow()
+        if date_range == '7d':
+            start_date = now - timedelta(days=7)
+        elif date_range == '30d':
+            start_date = now - timedelta(days=30)
+        elif date_range == '90d':
+            start_date = now - timedelta(days=90)
+        else:
+            start_date = now - timedelta(days=7)  # 默认7天
+        
+        # 1. 概览数据
+        total_books = Book.query.count()
+        total_users = User.query.count()
         current_borrows = BorrowRecord.query.filter_by(status='borrowed').count()
+        overdue_count = BorrowRecord.query.filter_by(status='overdue').count()
         
-        # 逾期借阅数量
-        overdue_borrows = BorrowRecord.query.filter_by(status='overdue').count()
+        # 2. 借阅趋势数据
+        borrow_trend = []
         
-        # 本月归还数量
-        this_month = datetime.utcnow().replace(day=1)
-        total_returns = BorrowRecord.query.filter(
-            BorrowRecord.status == 'returned',
-            BorrowRecord.return_date >= this_month
-        ).count()
+        # 根据日期范围生成日期序列
+        if date_range == '7d':
+            # 最近7天，按天统计
+            for i in range(7):
+                date = now - timedelta(days=i)
+                date_str = date.strftime('%Y-%m-%d')
+                
+                # 统计当天借阅数量
+                count = BorrowRecord.query.filter(
+                    BorrowRecord.borrow_date >= date.replace(hour=0, minute=0, second=0, microsecond=0),
+                    BorrowRecord.borrow_date < (date + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+                ).count()
+                
+                borrow_trend.append({'date': date_str, 'count': count})
+            
+            # 反转列表，按日期升序
+            borrow_trend = borrow_trend[::-1]
+        else:
+            # 最近30天或90天，按周统计
+            weeks = []
+            if date_range == '30d':
+                weeks = 4
+            else:
+                weeks = 12
+            
+            for i in range(weeks):
+                start_of_week = now - timedelta(weeks=i, days=now.weekday())
+                end_of_week = start_of_week + timedelta(days=6)
+                
+                week_str = f"{start_of_week.strftime('%m-%d')}~{end_of_week.strftime('%m-%d')}"
+                
+                # 统计本周借阅数量
+                count = BorrowRecord.query.filter(
+                    BorrowRecord.borrow_date >= start_of_week,
+                    BorrowRecord.borrow_date < end_of_week + timedelta(days=1)
+                ).count()
+                
+                borrow_trend.append({'date': week_str, 'count': count})
+            
+            # 反转列表，按日期升序
+            borrow_trend = borrow_trend[::-1]
         
-        # 累计罚金
-        total_fines = db.session.query(db.func.sum(BorrowRecord.fine_amount)).scalar() or 0
-
+        # 3. 借阅状态分布
+        status_distribution = []
+        statuses = [
+            ('borrowed', '已借阅'),
+            ('returned', '已归还'),
+            ('overdue', '已逾期')
+        ]
+        
+        for status, name in statuses:
+            count = BorrowRecord.query.filter_by(status=status).count()
+            status_distribution.append({
+                'name': name,
+                'value': count
+            })
+        
+        # 4. 热门图书（借阅次数最多的前10本）
+        top_books = []
+        
+        # 使用SQLAlchemy查询借阅次数最多的图书
+        book_borrow_counts = db.session.query(
+            BorrowRecord.book_id,
+            db.func.count(BorrowRecord.id).label('borrow_count')
+        ).group_by(BorrowRecord.book_id).order_by(db.text('borrow_count DESC')).limit(10).all()
+        
+        for book_id, borrow_count in book_borrow_counts:
+            book = Book.query.get(book_id)
+            if book:
+                top_books.append({
+                    'id': book.id,
+                    'title': book.title,
+                    'author': book.author,
+                    'borrow_count': borrow_count
+                })
+        
+        # 5. 用户借阅排名（借阅次数最多的前10个用户）
+        top_users = []
+        
+        # 使用SQLAlchemy查询借阅次数最多的用户
+        user_borrow_counts = db.session.query(
+            BorrowRecord.user_id,
+            db.func.count(BorrowRecord.id).label('borrow_count')
+        ).group_by(BorrowRecord.user_id).order_by(db.text('borrow_count DESC')).limit(10).all()
+        
+        for user_id, borrow_count in user_borrow_counts:
+            user = User.query.get(user_id)
+            if user:
+                top_users.append({
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'borrow_count': borrow_count
+                })
+        
+        # 返回所有统计数据
         return jsonify({
-            'current_borrows': current_borrows,
-            'overdue_borrows': overdue_borrows,
-            'total_returns': total_returns,
-            'total_fines': float(total_fines)
+            'overview': {
+                'totalBooks': total_books,
+                'totalUsers': total_users,
+                'currentBorrows': current_borrows,
+                'overdueCount': overdue_count
+            },
+            'borrowTrend': borrow_trend,
+            'statusDistribution': status_distribution,
+            'topBooks': top_books,
+            'topUsers': top_users
         }), 200
 
     except Exception as e:

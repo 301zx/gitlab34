@@ -15,6 +15,11 @@ const routes = [
         component: () => import('@/views/Books.vue')
       },
       {
+        path: 'my-books',
+        name: 'MyBooks',
+        component: () => import('@/views/MyBooks.vue')
+      },
+      {
         path: 'profile',
         name: 'Profile',
         component: () => import('@/views/pofile.vue')
@@ -51,9 +56,24 @@ const routes = [
         component: () => import('@/views/admin/UserManagement.vue')
       },
       {
+        path: 'books',
+        name: 'BookManagement',
+        component: () => import('@/views/admin/BookManagement.vue')
+      },
+      {
+        path: 'categories',
+        name: 'CategoryManagement',
+        component: () => import('@/views/admin/CategoryManagement.vue')
+      },
+      {
         path: 'borrows',
         name: 'BorrowManagement',
         component: () => import('@/views/admin/BorrowManagement.vue')
+      },
+      {
+        path: 'statistics',
+        name: 'Statistics',
+        component: () => import('@/views/admin/Statistics.vue')
       }
     ]
   },
