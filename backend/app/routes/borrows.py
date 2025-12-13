@@ -121,8 +121,8 @@ def get_my_borrows():
         per_page = request.args.get('per_page', 10, type=int)
         
         # 处理 status 参数，支持单值和数组值
-        # 使用 getlist 获取所有 status 参数，包括数组形式的 status[]
-        status_values = request.args.getlist('status')
+        # 同时处理 status 和 status[] 格式的参数
+        status_values = request.args.getlist('status') + request.args.getlist('status[]')
 
         query = BorrowRecord.query.filter_by(user_id=current_user_id)
 
@@ -162,13 +162,14 @@ def get_all_borrows():
     try:
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
-        status = request.args.get('status', '')
+        # 同时处理 status 和 status[] 格式的参数
+        status_values = request.args.getlist('status') + request.args.getlist('status[]')
         search = request.args.get('search', '')
 
         query = BorrowRecord.query
 
-        if status:
-            query = query.filter_by(status=status)
+        if status_values:
+            query = query.filter(BorrowRecord.status.in_(status_values))
 
         if search:
             query = query.join(User).join(Book).filter(

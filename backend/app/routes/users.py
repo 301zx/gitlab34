@@ -15,7 +15,9 @@ def get_users():
         per_page = request.args.get('per_page', 10, type=int)
         search = request.args.get('search', '')
         role = request.args.get('role', '')
-        status = request.args.get('status', '')
+        # 处理 status 参数，支持单值和数组值
+        # 同时处理 status 和 status[] 格式的参数
+        status_values = request.args.getlist('status') + request.args.getlist('status[]')
 
         # 构建查询
         query = User.query
@@ -29,10 +31,22 @@ def get_users():
         if role:
             query = query.filter_by(role=role)
 
-        if status:
-            if status == 'active':
+        if status_values:
+            # 处理状态过滤逻辑
+            active_filter = False
+            inactive_filter = False
+            for status in status_values:
+                if status == 'active':
+                    active_filter = True
+                elif status == 'inactive':
+                    inactive_filter = True
+            
+            if active_filter and inactive_filter:
+                # 如果同时包含active和inactive，不过滤
+                pass
+            elif active_filter:
                 query = query.filter_by(is_active=True)
-            elif status == 'inactive':
+            elif inactive_filter:
                 query = query.filter_by(is_active=False)
 
         # 分页查询
