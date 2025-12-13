@@ -1,3 +1,4 @@
+# 测试git是否能检测到修改
 import os
 from app import create_app
 from config.init import config
