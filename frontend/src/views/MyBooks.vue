@@ -149,9 +149,7 @@ const fetchBorrows = async () => {
     if (response && response.borrows) {
       borrows.value = response.borrows
       total.value = response.total || 0
-      
-      // 获取图书详情
-      await fetchBookDetails()
+      // API已经返回了完整的图书信息，不需要再单独获取
     } else {
       // 当 response 不存在或格式不正确时，显示空列表
       borrows.value = []
@@ -168,20 +166,6 @@ const fetchBorrows = async () => {
     console.error('获取借阅记录失败:', error)
   } finally {
     loading.value = false
-  }
-}
-
-// 获取图书详情
-const fetchBookDetails = async () => {
-  for (const borrow of borrows.value) {
-    try {
-      // api.js 响应拦截器已经返回 response.data，所以不需要再访问 .data
-      const bookResponse = await bookService.getBook(borrow.book_id)
-      borrow.book = bookResponse
-    } catch (error) {
-      console.error(`获取图书 ${borrow.book_id} 详情失败:`, error)
-      borrow.book = null
-    }
   }
 }
 
