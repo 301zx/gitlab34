@@ -87,7 +87,7 @@ def return_book(record_id):
 
         book = Book.query.get(borrow_record.book_id)
 
-        # 更新借阅记录
+        # 更新借阅记录，无论当前状态是borrowed还是overdue，都更新为returned
         borrow_record.return_date = datetime.utcnow()
         borrow_record.status = 'returned'
 

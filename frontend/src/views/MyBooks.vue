@@ -144,13 +144,28 @@ const fetchBorrows = async () => {
     }
     
     const response = await borrowService.getMyBorrows(params)
-    borrows.value = response.data.borrows
-    total.value = response.data.total
     
-    // 获取图书详情
-    await fetchBookDetails()
+    // 检查 response 是否存在且包含 borrows 属性
+    if (response && response.borrows) {
+      borrows.value = response.borrows
+      total.value = response.total || 0
+      
+      // 获取图书详情
+      await fetchBookDetails()
+    } else {
+      // 当 response 不存在或格式不正确时，显示空列表
+      borrows.value = []
+      total.value = 0
+      console.warn('获取借阅记录格式不正确或为空')
+    }
   } catch (error) {
-    ElMessage.error('获取借阅记录失败: ' + error.message)
+    // 处理 API 错误，确保组件不会崩溃
+    borrows.value = []
+    total.value = 0
+    
+    // 显示友好的错误提示
+    ElMessage.error('获取借阅记录失败')
+    console.error('获取借阅记录失败:', error)
   } finally {
     loading.value = false
   }
@@ -160,8 +175,9 @@ const fetchBorrows = async () => {
 const fetchBookDetails = async () => {
   for (const borrow of borrows.value) {
     try {
+      // api.js 响应拦截器已经返回 response.data，所以不需要再访问 .data
       const bookResponse = await bookService.getBook(borrow.book_id)
-      borrow.book = bookResponse.data
+      borrow.book = bookResponse
     } catch (error) {
       console.error(`获取图书 ${borrow.book_id} 详情失败:`, error)
       borrow.book = null
