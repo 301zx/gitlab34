@@ -11,7 +11,7 @@ def get_notifications():
     """获取当前用户的通知列表"""
     try:
         # 获取当前用户ID
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         
         # 获取分页参数
         page = request.args.get('page', 1, type=int)
@@ -53,7 +53,7 @@ def mark_notification_as_read(notification_id):
     """标记通知为已读"""
     try:
         # 获取当前用户ID
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         
         # 查找通知
         notification = Notification.query.get_or_404(notification_id)
@@ -80,7 +80,7 @@ def delete_notification(notification_id):
     """删除通知"""
     try:
         # 获取当前用户ID
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         
         # 查找通知
         notification = Notification.query.get_or_404(notification_id)
@@ -106,7 +106,7 @@ def mark_all_notifications_as_read():
     """标记所有通知为已读"""
     try:
         # 获取当前用户ID
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         
         # 更新所有通知为已读
         notifications = Notification.query.filter_by(user_id=user_id, is_read=False).all()

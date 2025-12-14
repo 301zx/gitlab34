@@ -49,7 +49,7 @@ def get_book_reviews(book_id):
 def add_review(book_id):
     try:
         data = request.get_json()
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         
         # 验证图书存在
         book = Book.query.get_or_404(book_id)
@@ -96,7 +96,7 @@ def add_review(book_id):
 def update_review(review_id):
     try:
         data = request.get_json()
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         
         # 获取评论
         review = Review.query.get_or_404(review_id)
@@ -139,7 +139,7 @@ def update_review(review_id):
 @jwt_required()
 def delete_review(review_id):
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         
         # 获取评论
         review = Review.query.get_or_404(review_id)
@@ -199,7 +199,7 @@ def get_user_reviews(user_id):
 @jwt_required()
 def get_my_reviews():
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
         

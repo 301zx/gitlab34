@@ -11,7 +11,7 @@ borrows_bp = Blueprint('borrows', __name__)
 def borrow_book():
     """借阅图书"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         data = request.get_json()
 
         if not data.get('book_id'):
@@ -72,7 +72,7 @@ def borrow_book():
 def return_book(record_id):
     """归还图书"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         borrow_record = BorrowRecord.query.get_or_404(record_id)
 
         # 检查权限：只能归还自己的图书或管理员操作
@@ -116,7 +116,7 @@ def return_book(record_id):
 def get_my_borrows():
     """获取我的借阅记录"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
         
@@ -207,7 +207,7 @@ def get_all_borrows():
 def renew_book(record_id):
     """续借图书"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         borrow_record = BorrowRecord.query.get_or_404(record_id)
 
         # 检查权限

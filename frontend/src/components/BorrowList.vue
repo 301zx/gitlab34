@@ -131,11 +131,25 @@ const loadBorrows = async () => {
     }
 
     const response = await borrowService.getMyBorrows(params)
-    borrows.value = response.borrows
-    pagination.total = response.total
+    
+    // 检查 response 是否存在且包含 borrows 属性
+    if (response && response.borrows) {
+      borrows.value = response.borrows
+      pagination.total = response.total || 0
+    } else {
+      // 当 response 不存在或格式不正确时，显示空列表
+      borrows.value = []
+      pagination.total = 0
+      console.warn('获取借阅记录格式不正确或为空')
+    }
   } catch (error) {
+    // 处理 API 错误，确保组件不会崩溃
+    borrows.value = []
+    pagination.total = 0
+    
+    // 显示友好的错误提示
     ElMessage.error('加载借阅记录失败')
-    console.error(error)
+    console.error('获取借阅记录失败:', error)
   } finally {
     loading.value = false
   }

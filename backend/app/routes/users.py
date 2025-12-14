@@ -72,7 +72,7 @@ def get_users():
 def get_user(user_id):
     """获取用户详情"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         current_user = User.query.get(current_user_id)
 
         # 只能查看自己的信息或管理员查看所有信息
@@ -90,7 +90,7 @@ def get_user(user_id):
 def update_user(user_id):
     """更新用户信息"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         current_user = User.query.get(current_user_id)
 
         # 只能修改自己的信息或管理员修改所有信息
@@ -138,7 +138,7 @@ def update_user(user_id):
 def delete_user(user_id):
     """删除用户（管理员权限）"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         
         # 不能删除自己
         if current_user_id == user_id:
@@ -164,7 +164,7 @@ def delete_user(user_id):
 def update_profile():
     """更新个人资料"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         user = User.query.get_or_404(current_user_id)
         data = request.get_json()
 
@@ -196,7 +196,7 @@ def update_profile():
 def change_password():
     """修改密码"""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         user = User.query.get_or_404(current_user_id)
         data = request.get_json()
 

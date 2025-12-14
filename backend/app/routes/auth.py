@@ -32,8 +32,8 @@ def register():
         db.session.add(user)
         db.session.commit()
         
-        # 生成访问令牌
-        access_token = create_access_token(identity=user.id)
+        # 生成访问令牌，Flask-JWT-Extended 4.x要求identity必须是字符串类型
+        access_token = create_access_token(identity=str(user.id))
         
         return jsonify({
             'message': '用户注册成功',
@@ -64,8 +64,8 @@ def login():
         if not user.is_active:
             return jsonify({'error': '账户已被禁用'}), 401
         
-        # 生成访问令牌
-        access_token = create_access_token(identity=user.id)
+        # 生成访问令牌，Flask-JWT-Extended 4.x要求identity必须是字符串类型
+        access_token = create_access_token(identity=str(user.id))
         
         return jsonify({
             'message': '登录成功',
