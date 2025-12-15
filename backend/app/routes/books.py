@@ -4,7 +4,7 @@ from ..models import db, Book, Category, User
 from ..middleware.auth import admin_required
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, date
 from werkzeug.utils import secure_filename
 from pathlib import Path
 
@@ -90,12 +90,16 @@ def create_book():
             return jsonify({'error': 'ISBN已存在'}), 400
         
         # 创建新图书
+        publish_date_value = None
+        if data.get('publish_date'):
+            publish_date_value = datetime.strptime(data['publish_date'], '%Y-%m-%d').date()
+        
         book = Book(
             isbn=data['isbn'],
             title=data['title'],
             author=data['author'],
             publisher=data.get('publisher'),
-            publish_date=data.get('publish_date'),
+            publish_date=publish_date_value,
             category_id=data['category_id'],
             total_copies=data['total_copies'],
             available_copies=data['total_copies']
@@ -136,7 +140,10 @@ def update_book(book_id):
         if 'publisher' in data:
             book.publisher = data['publisher']
         if 'publish_date' in data:
-            book.publish_date = data['publish_date']
+            if data['publish_date']:
+                book.publish_date = datetime.strptime(data['publish_date'], '%Y-%m-%d').date()
+            else:
+                book.publish_date = None
         if 'category_id' in data:
             book.category_id = data['category_id']
         if 'total_copies' in data:
@@ -162,9 +169,13 @@ def delete_book(book_id):
     try:
         book = Book.query.get_or_404(book_id)
         
-        # 检查图书是否被借阅
-        if book.available_copies != book.total_copies:
-            return jsonify({'error': '图书已被借阅，无法删除'}), 400
+        # 检查是否有相关的借阅记录
+        if book.borrow_records.count() > 0:
+            return jsonify({'error': '图书存在借阅记录，无法删除'}), 400
+        
+        # 检查是否有相关的评论记录
+        if book.reviews.count() > 0:
+            return jsonify({'error': '图书存在评论记录，无法删除'}), 400
         
         db.session.delete(book)
         db.session.commit()

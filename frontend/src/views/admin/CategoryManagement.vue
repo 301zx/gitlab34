@@ -176,8 +176,8 @@ const fetchCategories = async () => {
     }
     
     const response = await categoriesService.getCategories(params)
-    categories.value = response.data.categories || response.data
-    total.value = response.data.total || categories.value.length
+    categories.value = response.categories || []
+    total.value = response.total || 0
   } catch (error) {
     ElMessage.error('获取分类列表失败: ' + error.message)
   } finally {

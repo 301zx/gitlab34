@@ -230,12 +230,12 @@ const loadBookDetail = async () => {
   loading.value = true
   try {
     const response = await bookService.getBook(bookId.value)
-    book.value = response.data
+    book.value = response
     
     // 获取分类名称
     if (book.value.category_id) {
       const categoryResponse = await categoriesService.getCategory(book.value.category_id)
-      categoryName.value = categoryResponse.data.name
+      categoryName.value = categoryResponse.name
     }
   } catch (error) {
     ElMessage.error('获取图书详情失败: ' + error.message)
@@ -251,8 +251,8 @@ const loadComments = async () => {
       page: commentPage.value,
       per_page: commentPageSize.value
     })
-    comments.value = response.data.reviews
-    commentsTotal.value = response.data.total
+    comments.value = response.reviews
+    commentsTotal.value = response.total
   } catch (error) {
     ElMessage.error('获取评论列表失败: ' + error.message)
   }
@@ -295,8 +295,23 @@ const submitComment = async () => {
   try {
     await commentFormRef.value.validate()
     
-    // 这里可以实现提交评论的逻辑
-    ElMessage.success(editingComment ? '评论更新成功' : '评论添加成功')
+    // 实现提交评论的逻辑
+    if (editingComment.value) {
+      // 更新评论
+      await bookService.updateBookReview(editingComment.value.id, {
+        rating: commentForm.rating,
+        comment: commentForm.comment
+      })
+      ElMessage.success('评论更新成功')
+    } else {
+      // 添加评论
+      await bookService.addBookReview(bookId.value, {
+        rating: commentForm.rating,
+        comment: commentForm.comment
+      })
+      ElMessage.success('评论添加成功')
+    }
+    
     showCommentDialog.value = false
     resetCommentForm()
     loadComments() // 重新加载评论列表
@@ -324,7 +339,8 @@ const deleteComment = async (commentId) => {
       type: 'warning'
     })
     
-    // 这里可以实现删除评论的逻辑
+    // 实现删除评论的逻辑
+    await bookService.deleteBookReview(commentId)
     ElMessage.success('评论删除成功')
     loadComments() // 重新加载评论列表
   } catch (error) {

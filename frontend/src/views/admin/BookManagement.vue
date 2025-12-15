@@ -232,8 +232,8 @@ const fetchBooks = async () => {
     }
     
     const response = await bookService.getBooks(params)
-    books.value = response.data.books
-    total.value = response.data.total
+    books.value = response.books
+    total.value = response.total
   } catch (error) {
     ElMessage.error('获取图书列表失败: ' + error.message)
   } finally {
@@ -245,7 +245,7 @@ const fetchBooks = async () => {
 const fetchCategories = async () => {
   try {
     const response = await categoriesService.getCategories()
-    categories.value = response.data
+    categories.value = response.categories
   } catch (error) {
     ElMessage.error('获取分类列表失败: ' + error.message)
   }
