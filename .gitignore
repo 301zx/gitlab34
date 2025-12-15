@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+venv/
+.env
+
+# Build output
+dist/
+build/
+
+# Logs
+logs/
+*.log
+
+# Database
+*.db
+database/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Testing
+coverage/
+.pytest_cache/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Documentation build
+_site/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Git
+.gitignore
+.gitattributes
+.gitmodules
