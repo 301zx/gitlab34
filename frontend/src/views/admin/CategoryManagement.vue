@@ -279,8 +279,9 @@ const handleDelete = async (categoryId) => {
     ElMessage.success('分类删除成功')
     fetchCategories()
   } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('删除失败: ' + error.message)
+    // 错误提示已在响应拦截器中处理，这里只需要处理用户取消操作的情况
+    if (error === 'cancel') {
+      // 用户取消操作，不显示任何提示
     }
   }
 }

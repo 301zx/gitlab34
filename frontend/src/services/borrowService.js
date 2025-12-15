@@ -29,5 +29,17 @@ export const borrowService = {
   async renewBook(recordId) {
     const response = await api.post(`/borrows/${recordId}/renew`)
     return response
+  },
+
+  // 获取借阅统计数据（用于借阅管理页面）
+  async getStats(params = {}) {
+    const response = await api.get('/borrows/stats', { params })
+    return response
+  },
+
+  // 获取借阅统计数据（用于数据统计页面）
+  async getBorrowStats(params = {}) {
+    const response = await api.get('/borrows/stats', { params })
+    return response
   }
 }

@@ -177,25 +177,24 @@ const fetchStatistics = async () => {
   try {
     // 获取借阅统计数据
     const statsResponse = await borrowService.getBorrowStats({ range: dateRange.value })
-    const statsData = statsResponse.data
     
     // 更新概览数据
-    overviewStats.totalBooks = statsData.overview.totalBooks || 0
-    overviewStats.totalUsers = statsData.overview.totalUsers || 0
-    overviewStats.currentBorrows = statsData.overview.currentBorrows || 0
-    overviewStats.overdueCount = statsData.overview.overdueCount || 0
+    overviewStats.totalBooks = statsResponse.overview.totalBooks || 0
+    overviewStats.totalUsers = statsResponse.overview.totalUsers || 0
+    overviewStats.currentBorrows = statsResponse.overview.currentBorrows || 0
+    overviewStats.overdueCount = statsResponse.overview.overdueCount || 0
     
     // 更新热门图书
-    topBooks.value = statsData.topBooks || []
+    topBooks.value = statsResponse.topBooks || []
     
     // 更新用户借阅排名
-    topUsers.value = statsData.topUsers || []
+    topUsers.value = statsResponse.topUsers || []
     
     // 更新借阅趋势
-    borrowTrend.value = statsData.borrowTrend || []
+    borrowTrend.value = statsResponse.borrowTrend || []
     
     // 更新借阅状态分布
-    statusDistribution.value = statsData.statusDistribution || []
+    statusDistribution.value = statsResponse.statusDistribution || []
     
     // 渲染图表
     nextTick(() => {
