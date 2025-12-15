@@ -91,7 +91,6 @@ def create_app(config_class=None):
     from app.routes.reviews import reviews_bp
     from app.routes.reservations import reservations_bp
     from app.routes.notifications import notifications_bp
-    from app.routes.logs import logs_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(books_bp, url_prefix='/api')
@@ -101,6 +100,5 @@ def create_app(config_class=None):
     app.register_blueprint(reviews_bp, url_prefix='/api')
     app.register_blueprint(reservations_bp, url_prefix='/api')
     app.register_blueprint(notifications_bp, url_prefix='/api')
-    app.register_blueprint(logs_bp, url_prefix='/api')
     
     return app

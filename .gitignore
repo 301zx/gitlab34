@@ -12,8 +12,8 @@ logs/
 *.log
 
 # Database
-*.db
-database/
+#*.db
+#database/
 
 # Editor directories and files
 .vscode/
