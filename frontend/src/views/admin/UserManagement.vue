@@ -2,7 +2,7 @@
   <div class="user-management">
     <div class="page-header">
       <h2>用户管理</h2>
-      <el-button type="primary" @click="showAddUserDialog = true">
+      <el-button type="primary" @click="showUserDialog = true">
         <el-icon><Plus /></el-icon>
         添加用户
       </el-button>

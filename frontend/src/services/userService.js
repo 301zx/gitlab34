@@ -29,5 +29,11 @@ export const userService = {
   async updateProfile(userData) {
     const response = await api.put('/auth/profile', userData)
     return response
+  },
+
+  // 创建用户（管理员）
+  async createUser(userData) {
+    const response = await api.post('/users', userData)
+    return response
   }
 }

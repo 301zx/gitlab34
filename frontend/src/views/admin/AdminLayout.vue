@@ -49,11 +49,6 @@
               <el-icon><DataAnalysis /></el-icon>
               <span>数据统计</span>
             </el-menu-item>
-            
-            <el-menu-item index="/admin/logs">
-              <el-icon><Document /></el-icon>
-              <span>系统日志</span>
-            </el-menu-item>
           </el-menu>
         </el-aside>
 

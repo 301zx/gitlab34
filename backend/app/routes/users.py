@@ -67,6 +67,51 @@ def get_users():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@users_bp.route('/users', methods=['POST'])
+@jwt_required()
+@admin_required
+def create_user():
+    """创建新用户（管理员权限）"""
+    try:
+        data = request.get_json()
+        
+        # 验证必填字段
+        required_fields = ['username', 'email', 'password', 'role']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({'error': f'{field}是必填项'}), 400
+        
+        # 检查用户名是否已存在
+        if User.query.filter_by(username=data['username']).first():
+            return jsonify({'error': '用户名已存在'}), 400
+        
+        # 检查邮箱是否已存在
+        if User.query.filter_by(email=data['email']).first():
+            return jsonify({'error': '邮箱已存在'}), 400
+        
+        # 创建新用户
+        user = User(
+            username=data['username'],
+            email=data['email'],
+            role=data['role'],
+            is_active=data.get('is_active', True)
+        )
+        
+        # 设置密码
+        user.set_password(data['password'])
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        return jsonify({
+            'message': '用户创建成功',
+            'user': user.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 @users_bp.route('/users/<int:user_id>', methods=['GET'])
 @jwt_required()
 def get_user(user_id):

@@ -71,16 +71,7 @@ const routes = [
         name: 'BorrowManagement',
         component: () => import('@/views/admin/BorrowManagement.vue')
       },
-      {
-        path: 'statistics',
-        name: 'Statistics',
-        component: () => import('@/views/admin/Statistics.vue')
-      },
-      {
-        path: 'logs',
-        name: 'LogManagement',
-        component: () => import('@/views/admin/LogManagement.vue')
-      }
+      {        path: 'statistics',        name: 'Statistics',        component: () => import('@/views/admin/Statistics.vue')      }
     ]
   },
   {
