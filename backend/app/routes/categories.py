@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
-from ..models import db, Category
+from ..models import db, Category, Book
 from ..middleware.auth import admin_required
 
 categories_bp = Blueprint('categories', __name__)
@@ -110,7 +110,7 @@ def delete_category(category_id):
             return jsonify({'error': '该分类下有子分类，无法删除'}), 400
 
         # 检查是否有图书使用该分类
-        books_count = category.books.count()
+        books_count = Book.query.filter_by(category_id=category_id).count()
         if books_count > 0:
             return jsonify({'error': '该分类下有图书，无法删除'}), 400
 
