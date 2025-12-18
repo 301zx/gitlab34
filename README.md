@@ -10,7 +10,7 @@
 - 语言：Python
 
 ### 前端
-- 框架：Vue.js
+- 框架：Vue3.js
 - 语言：JavaScript/TypeScript
 
 ### 数据库
